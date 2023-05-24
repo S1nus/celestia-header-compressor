@@ -343,11 +343,12 @@ checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 name = "header-compressor"
 version = "0.1.0"
 dependencies = [
+ "prost",
  "serde",
  "serde_json",
  "serde_with",
  "tendermint",
- "tendermint-proto",
+ "tendermint-proto 0.32.0",
 ]
 
 [[package]]
@@ -765,9 +766,25 @@ dependencies = [
  "signature",
  "subtle",
  "subtle-encoding",
- "tendermint-proto",
+ "tendermint-proto 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time",
  "zeroize",
+]
+
+[[package]]
+name = "tendermint-proto"
+version = "0.32.0"
+dependencies = [
+ "bytes",
+ "flex-error",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-types",
+ "serde",
+ "serde_bytes",
+ "subtle-encoding",
+ "time",
 ]
 
 [[package]]
