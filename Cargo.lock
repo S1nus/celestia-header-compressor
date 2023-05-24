@@ -347,6 +347,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "tendermint",
+ "tendermint-proto",
 ]
 
 [[package]]
