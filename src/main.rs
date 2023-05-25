@@ -6,7 +6,12 @@ use tendermint_proto::v0_37::{
         Header as RawHeader,
         Commit as RawCommit,
         Vote as RawVote,
+        CanonicalVote as RawCanonicalVote,
         ValidatorSet as RawValidatorSet,
+        PartSetHeader,
+        CanonicalPartSetHeader,
+        CanonicalBlockId,
+        BlockId,
         SignedMsgType,
     },
     version::Consensus as RawConsensusVersion,
@@ -47,13 +52,42 @@ fn get_vote(head: &CelestiaHeader, index: usize) -> RawVote {
     }
 }
 
+fn get_canonical_vote(head: &CelestiaHeader, index: usize, chain_id: String) -> RawCanonicalVote {
+    RawCanonicalVote {
+        r#type: SignedMsgType::Precommit.into(),
+        height: head.commit.height,
+        round: head.commit.round.into(),
+        block_id: match &head.commit.block_id {
+            Some(b) => Some(canonize_block_id(&b)),
+            None => None,
+        },
+        timestamp: head.commit.signatures[index].timestamp.clone(),
+        chain_id: chain_id,
+    }
+}
+
+fn canonize_block_id(b: &BlockId) -> CanonicalBlockId {
+    let p = match &b.part_set_header {
+        Some(p) => Some(CanonicalPartSetHeader {
+            total: p.total,
+            hash: p.hash.clone(),
+        }),
+        None => None,
+    };
+    CanonicalBlockId {
+        hash: b.hash.clone(),
+        part_set_header: p,
+    }
+}
+
 fn main() {
 
     let file = fs::read("header.json")
         .unwrap();
     let resp: Response = serde_json::from_slice(file.as_slice()).unwrap();
     let head = resp.result;
-    let v0 = get_vote(&head, 0);
+    let chain_id = String::from("celestia");
+    let v0 = get_canonical_vote(&head, 0, chain_id);
     let buf = v0.encode_to_vec();
     println!("{:02X?}", buf);
 }
