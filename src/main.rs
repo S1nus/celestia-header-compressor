@@ -16,6 +16,13 @@ use tendermint_proto::v0_37::{
     },
     version::Consensus as RawConsensusVersion,
 };
+use tendermint::{
+    crypto::default::signature::Verifier as SigVerifier,
+    crypto::signature::Verifier,
+    Signature,
+    PublicKey,
+};
+use tendermint_proto::crypto::PublicKey as RawPubkey;
 use serde::{Deserialize, Serialize};
 use prost::Message;
 
@@ -41,7 +48,8 @@ struct Response {
 
 fn get_vote(head: &CelestiaHeader, index: usize) -> RawVote {
     RawVote {
-        r#type: SignedMsgType::Precommit.into(),
+        //r#type: SignedMsgType::Precommit.into(),
+        r#type: SignedMsgType::Proposal.into(),
         height: head.commit.height,
         round: head.commit.round,
         block_id: head.commit.block_id.clone(),
@@ -86,8 +94,23 @@ fn main() {
         .unwrap();
     let resp: Response = serde_json::from_slice(file.as_slice()).unwrap();
     let head = resp.result;
-    let chain_id = String::from("celestia");
+    let chain_id = head.header.chain_id.clone();
     let v0 = get_canonical_vote(&head, 0, chain_id);
-    let buf = v0.encode_to_vec();
-    println!("{:02X?}", buf);
+    let mut buf = v0.encode_length_delimited_to_vec();
+    let sig = Signature::try_from(head.commit.signatures[0].signature.clone())
+        .unwrap();
+    let pubkey = head.validator_set.validators[0].clone().pub_key.unwrap();
+    let sum = pubkey.sum.unwrap();
+    let mut pkbytes = match sum {
+        tendermint_proto::crypto::public_key::Sum::Ed25519(e) => e,
+        tendermint_proto::crypto::public_key::Sum::Secp256k1(_) => {
+            panic!("Not supported");
+        }
+    };
+    let pk = PublicKey::from_raw_ed25519(pkbytes.as_slice()).unwrap();
+    let v = SigVerifier::verify(pk, buf.as_slice(), &sig);
+    match v {
+        Ok(_) => {println!("Verification SUCCESS!");},
+        Err(_) => {println!("Verification FAILED");}
+    }
 }
