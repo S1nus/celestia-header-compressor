@@ -1,5 +1,6 @@
 use std::{fs, ops::Index};
 use std::str::FromStr;
+use tendermint::Signature;
 use tendermint_proto::v0_37::{
     types::{
         BlockId as RawBlockId, 
@@ -18,6 +19,7 @@ use tendermint_proto::v0_37::{
 };
 use serde::{Deserialize, Serialize};
 use prost::Message;
+use ed25519_dalek::{PublicKey, Signature};
 
 #[derive(Deserialize, Serialize)]
 struct DAH {
@@ -89,5 +91,6 @@ fn main() {
     let chain_id = String::from("celestia");
     let v0 = get_canonical_vote(&head, 0, chain_id);
     let buf = v0.encode_to_vec();
+    let sig = head.commit.signatures[0];
     println!("{:02X?}", buf);
 }
