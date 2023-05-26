@@ -1,6 +1,5 @@
 use std::{fs, ops::Index};
 use std::str::FromStr;
-use tendermint::Signature;
 use tendermint_proto::v0_37::{
     types::{
         BlockId as RawBlockId, 
@@ -26,7 +25,6 @@ use tendermint::{
 use tendermint_proto::crypto::PublicKey as RawPubkey;
 use serde::{Deserialize, Serialize};
 use prost::Message;
-use ed25519_dalek::{PublicKey, Signature};
 
 #[derive(Deserialize, Serialize)]
 struct DAH {
@@ -98,11 +96,6 @@ fn main() {
     let head = resp.result;
     let chain_id = head.header.chain_id.clone();
     let v0 = get_canonical_vote(&head, 0, chain_id);
-<<<<<<< HEAD
-    let buf = v0.encode_to_vec();
-    let sig = head.commit.signatures[0];
-    println!("{:02X?}", buf);
-=======
     let mut buf = v0.encode_length_delimited_to_vec();
     let sig = Signature::try_from(head.commit.signatures[0].signature.clone())
         .unwrap();
@@ -120,5 +113,4 @@ fn main() {
         Ok(_) => {println!("Verification SUCCESS!");},
         Err(_) => {println!("Verification FAILED");}
     }
->>>>>>> 66ff85f
 }
