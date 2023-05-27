@@ -89,6 +89,23 @@ fn canonize_block_id(b: &BlockId) -> CanonicalBlockId {
 }
 
 fn main() {
+    let file = fs::read("header.json")
+        .unwrap();
+    let resp: Response = serde_json::from_slice(file.as_slice()).unwrap();
+    let head = resp.result;
+    let chain_id = head.header.chain_id.clone();
+    let v0 = get_canonical_vote(&head, 0, chain_id);
+    let bid = v0.block_id.unwrap();
+    let part_set_header = bid.part_set_header.unwrap();
+    let part_set_header_bytes = part_set_header.encode_length_delimited_to_vec();
+    let hash = part_set_header.hash;
+    let total = part_set_header.total;
+    println!("PARTSET HEADER BYTES\n{:?}", part_set_header_bytes);
+    println!("HASH\n{:?}", hash);
+    println!("TOTAL\n{:?}", total);
+}
+
+fn verify_sigs() {
 
     let file = fs::read("header.json")
         .unwrap();
